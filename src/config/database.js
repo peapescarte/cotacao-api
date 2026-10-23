@@ -17,3 +17,23 @@ module.exports = {
     },
     timezone: 'America/Sao_Paulo'
 }
+
+// require('dotenv').config();
+
+// console.log(process.env)
+
+// module.exports = {
+//     dialect: 'postgres',
+//     host: "127.0.0.1",
+//     port: 5432,
+//     username: "postgres",
+//     password: "1234",
+//     database: 'postgres',
+//     define: {
+//         timestamp: true
+//     },
+//     dialectOptions: {
+//         timezone: 'America/Sao_Paulo'
+//     },
+//     timezone: 'America/Sao_Paulo'
+// }

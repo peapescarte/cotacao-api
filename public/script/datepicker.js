@@ -9,6 +9,7 @@ $(function(){
       clearEndWhenSelectingStart: true,
       disableOutsideDates: false,
       numberOfMonths: 1,
+      availableDates: [],
       
       // Set either the start or the end date
       _changeDate: function(){
@@ -65,6 +66,27 @@ $(function(){
         }
       },
       
+      setAvailableDates: function(dates){
+        if(Array.isArray(dates)){
+          MultiDate.availableDates = dates.map(function(date){
+            return moment(date).startOf('day');
+          });
+          if(MultiDate.$datepicker){
+            MultiDate.$datepicker.datepicker("refresh");
+          }
+        }
+      },
+
+      _isDateAvailable: function(date){
+        if(!MultiDate.availableDates || MultiDate.availableDates.length === 0){
+          return true;
+        }
+        var current = moment(date).startOf('day');
+        return MultiDate.availableDates.some(function(available){
+          return current.isSame(available, 'day');
+        });
+      },
+
       _convertStringToJSDate: function(date, asMoment) {
         asMoment = asMoment || false;
         if(date) {
@@ -172,8 +194,9 @@ $(function(){
         var numberOfMonths = MultiDate.getNumberOfCalendars();
         MultiDate.datePickerSettings = {
           beforeShowDay: function(date){
-            var className = MultiDate._shouldDateBeSelected(date) ? "active" : "";
-            return [true, className];
+            var allowed = MultiDate._isDateAvailable(date);
+          var className = MultiDate._shouldDateBeSelected(date) ? "active" : "";
+            return [allowed, className];
           },
           numberOfMonths: numberOfMonths,
           dateFormat: "dd/mm/yy",
