@@ -105,7 +105,17 @@ def run():
         print(date)
         driver.execute_script("arguments[0].value = \'" + date + "\';", campo_data)
 
+        # Wait for any overlays to disappear
+        try:
+            WebDriverWait(driver, 10).until(
+                EC.invisibility_of_element_located((By.CSS_SELECTOR, ".cli-bar-container"))
+            )
+        except:
+            pass
+        
         botao_consultar = driver.find_element(By.CSS_SELECTOR, ".form-group button.btn.btn-success")
+        driver.execute_script("arguments[0].scrollIntoView(true);", botao_consultar)
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".form-group button.btn.btn-success")))
         botao_consultar.click()
 
         WebDriverWait(driver, 60).until(
@@ -164,12 +174,12 @@ def run():
 
         for indice, item in dados.iterrows():
 
-            print("INSERINDO: ", [db_utils.ler_codigo(item['Produto']), date, 'ceagesp', item['Menor'], item['Comun'], item['Maior'], 0, item['Classificação']])
+            print("INSERINDO: ", [db_utils.ler_codigo(item['Produto']), date, 'ceagesp', item['Menor'], item['Comum'], item['Maior'], 0, item['Classificação']])
 
             db_utils.load_data('public', 'cotacoes_pescados', 
                                 ['cod_pescado', 'data', 'fonte', 'minimo', 'mais_comum', 'maximo', 'media', 'tamanho'], 
                                 [[db_utils.ler_codigo(item['Produto']), db_utils.format_date(date), 'ceagesp', db_utils.format_number(item['Menor']), 
-                                  db_utils.format_number(item['Comun']), db_utils.format_number(item['Maior']), 0, item['Classificação']]])
+                                  db_utils.format_number(item['Comum']), db_utils.format_number(item['Maior']), 0, item['Classificação']]])
                 
     diretorio = './csv-ceagesp'
 

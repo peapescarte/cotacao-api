@@ -56,17 +56,33 @@ class CotPescadoController{
 
     }
 
-    async date(req, res){{
+    async date(req, res){
 
         const date = await CotPescado.findAll({
             order: [['data', 'DESC']],
             attributes: ['data'],
-            limit: 1
+            limit: 1,
+            raw: true
         })
 
         res.status(200).json(date[0]);
 
-    }}
+    }
+
+    async availableDates(req, res) {
+        // fonte padrão
+        const fonte = req.query.fonte || 'pesagro';
+
+        const dates = await CotPescado.findAll({
+            where: { fonte },
+            attributes: ['data'],
+            group: ['data'],
+            order: [['data', 'DESC']],
+            raw: true
+        });
+
+        res.status(200).json(dates.map(row => row.data));
+    }
 
     async precos(req, res){
 
@@ -154,37 +170,38 @@ class CotPescadoController{
     }
 
     async pescados(req, res) {
+        // Fonte padrão
+        const fonte = req.query.fonte || 'pesagro';
 
-        let where = {}
-
+        let where = {};
         where[Op.and] = [];
 
-        if(req.query.fonte){
-            where[Op.and].push({
-                fonte: req.query.fonte
-            });
-        }
-    
-        if (req.query.data) {
+        // sempre filtra por fonte (padrão 'pesagro')
+        where[Op.and].push({ fonte });
 
-            where[Op.and].push({
-                fonte: req.query.data
-            });
-    
+        // exigir que seja informada ao menos uma data
+        if (!req.query.data && !(req.query.inicio && req.query.fim)) {
+            return res.status(400).json({ error: 'Informe a data no parâmetro "data" ou informe "inicio" e "fim".' });
+        }
+
+        if (req.query.data) {
             const query = await CotPescado.findAll({
                 where: where,
-                attributes: [],
+                attributes: [
+                    [Sequelize.col('Pescado.descricao'), 'nome'],
+                    [Sequelize.col('Pescado.cod_pescado'), 'cod']
+                ],
                 include: [
                     {
                         model: Pescado,
-                        attributes: ['descricao', 'cod_pescado'],
+                        attributes: []
                     }
                 ],
                 raw: true,
-                distinct: true
+                group: ['Pescado.descricao', 'Pescado.cod_pescado']
             });
-    
-            res.status(200).json(query.map(item => ({ 'nome': item['Pescado.descricao'], 'cod': item["Pescado.cod_pescado"] })));
+
+            res.status(200).json(query.map(item => ({ nome: item.nome, cod: item.cod })));
         }
     
         if (req.query.inicio && req.query.fim) {
@@ -197,18 +214,21 @@ class CotPescadoController{
     
             const query = await CotPescado.findAll({
                 where: where,
-                attributes: [],
+                attributes: [
+                    [Sequelize.col('Pescado.descricao'), 'nome'],
+                    [Sequelize.col('Pescado.cod_pescado'), 'cod']
+                ],
                 include: [
                     {
                         model: Pescado,
-                        attributes: ['descricao', 'cod_pescado'],
+                        attributes: []
                     }
                 ],
                 raw: true,
-                distinct: true
+                group: ['Pescado.descricao', 'Pescado.cod_pescado']
             });
-    
-            res.status(200).json(query.map(item => ({ 'nome': item['Pescado.descricao'], 'cod': item["Pescado.cod_pescado"] })))
+
+            res.status(200).json(query.map(item => ({ nome: item.nome, cod: item.cod })))
         }
     }
 
